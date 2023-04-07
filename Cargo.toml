@@ -2,10 +2,13 @@
 name = "sumno"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Fetch a random word and definition from Ukrainian language dictionary"
+homepage = "https://github.com/NippleOfAnApe/sumno"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["blocking"] }
 scraper = "0.16.0"
 colored = "2.0.0"

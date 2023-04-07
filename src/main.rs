@@ -1,12 +1,10 @@
 #![feature(string_remove_matches)]
 use colored::*;
-use scraper::{Html, Selector};
+use scraper::{Html, Selector, Node};
 
 fn main() {
     // Завантажити сторінку у бафер
-    // let response = reqwest::blocking::get("http://sum.in.ua/s/vidkryvaty")  // Багато означень, 0 іллюстрацій
-    // let response = reqwest::blocking::get("http://sum.in.ua/random")
-    let response = reqwest::blocking::get("http://sum.in.ua/s/TURA")
+    let response = reqwest::blocking::get("http://sum.in.ua/random")
     // Якщо неможливо завантажити сторінку - паніка із повідомленням
         .expect("Couldn't load a webpage.").text().unwrap();
     let document = Html::parse_document(&response);
@@ -55,7 +53,7 @@ fn main() {
                     let mut znachennya: Vec<String> = vec![];
                     for znach in element.children() {
                         // Ототримати доступ до необробленого тексту
-                        if let scraper::Node::Text(t) = znach.value()
+                        if let Node::Text(t) = znach.value()
                         {
                             let new_text = &t.text.replace(";", "");
                             // ігнорувати обрізані слова
@@ -103,14 +101,14 @@ fn main() {
         let mut p_text = String::new();
         for child in cum.children()
         {
-            if let scraper::Node::Text(t) = child.value()
+            if let Node::Text(t) = child.value()
             {
                 // Укоротити від оскорочених слів
                 if t.len() > 15 {p_text.push_str(&t.text)}
             }
         }
 
-        // Якщо немає означення то це посилання на інше слово, тож друкуєм параграф повністю + приклади
+        // Якщо немає означення то це посилання на інше слово, тож друкуєм параграф повністю + приклади, якщо є
         if p_text.is_empty()
         {
             let mut cum = cum.text().collect::<String>();
@@ -134,17 +132,32 @@ fn main() {
         }
         else
         {
-            // Охайний друк із прикладами
-            println!("{}", znach_delimeter);
-            println!("{}", p_text.bold());
-            println!("{}", illus_delimeter);
-
-            for illus in fragment.select(&illus_selector)
+            // Зберегти усі приклади як окремі елементи у масиві
+            let mut illustrations: Vec<String> = vec![];
+            for child in fragment.select(&illus_selector)
             {
-                let pryklad = illus.text().collect::<String>();
-                println!("{}\n", pryklad.italic().yellow());
+                let word = child.text().collect::<String>();
+                illustrations.push(word);
+            }
+            if illustrations.len() != 0
+            {
+                // Охайний друк із прикладами
+                println!("{}", znach_delimeter);
+                println!("{}", p_text.bold());
+                println!("{}", illus_delimeter);
+
+                for pr in illustrations.iter()
+                {
+                    println!("{}\n", pr.italic().yellow());
+                }
+            }
+            else
+            {
+                // Приклади не виокремлено
+                let cum = fragment.text().collect::<String>();
+                println!("{}", znach_delimeter);
+                println!("{}", cum);
             }
         }
-
     }
 }
